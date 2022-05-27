@@ -1,0 +1,89 @@
+README pacman
+
+HANDIN: This is my final handin.
+
+OVERVIEW:
+    My pacman has 14 public classes (App, PaneOrganizer, Game, Pacman, MazeSquares, Ghosts, Dot, Energizer, Constants,
+    BoardCoordinate, Collidable interface, Direction enum, Item enum, Mode enum) and 4 inner private classes
+    (QuitHandler, KeyHandler, PenHandler, TimeHandler).
+    - App launches a new PaneOrganizer
+    - PaneOrganizer sets up a BorderPane as the root, a pane for the Game class, a quit button, and creates a new Game.
+    - Game sets up the 2d array map with walls, dots, energizers, four ghosts, and a pacman.
+    - The KeyHandler changes the direction that pacman moves in based on the arrow key pressed and pacman moves
+            continuously towards that direction, even when another arrow key is pressed (with a different direction)
+            and pacman can not move in that different direction.
+            - When the left arrow key is pressed, pacman's direction changes to left.
+            - When the right arrow key is pressed, pacman's direction changes to right.
+            - When the up arrow key is pressed, pacman's direction changes to up.
+            - When the down arrow key is pressed, pacman's direction changes to down.
+            - When the spacebar is pressed, the game pauses (along with the timelines) and the music pauses.
+            - Pressing Q, enter, or escape quits the game.
+    - If in chase mode, the ghosts target pacman's location (with different offsets for each ghost). In scatter mode,
+            each ghost targets a different corner of the maze. In frightened mode, the target for each ghosts changes
+            to a randomized corner of the maze (so it's always moving around). Each mode has a counter so that
+            the modes rotate back and forth.
+    - The ghost's breadth-first-search-target-finding algorithm queues the valid squares the ghost can move into
+            to approach its target square. It dequeues to get back to its current square and calculates the distance
+            it took for the path and updates the shortest path. The neighbors of the neighbors are added to the queue
+            to check its shortest path and this is repeated until the queue is empty and the ghost has found the
+            direction of the shortest path.
+    - If pacman collides with a dot, the dot gets eaten (removed graphically) and gets 10 points. If it collides with
+            an energizer, it gets 100 points and the mode turns into frightened so that it can eat ghosts. If it
+            collides with a ghost in chase or scatter mode, pacman loses a life and pacman and the ghosts are reset to
+            their original positions. If it collides with a ghost in frightened mode, it get 200 points and the ghost
+            is set back into the pen.
+    - A pen timeline is set up so that if there are eaten ghosts (aka ghosts in the pen), the pen releases the first
+            ghost eaten every four seconds.
+    - If all of pacman's lives are taken, the game ends. If pacman eats all the dots and energizers, the game proceeds
+            to the next level with a faster speed.
+
+
+DESIGN CHOICES:
+    - I used enums to create a group of constants to organize the different modes of the game, directions, and
+            collidable items. This is so I could use switch statements to change what happens during the game depending
+            on the mode and to easily organize the four directions pacman and the ghosts can travel. I created an
+            Item enum in order to edit, in the Game class, what happens when pacman collides with the different items.
+            I chose to do this because I instantiated my mode in my Game class, and the ghost would not be updated with
+            what mode the game was in, but the ghosts react differently to colliding with pacman in different modes.
+            Instead of instantiating the mode in the ghost class, I chose to leave in the game class because it easier
+            for me to change what happens in the game overall depending on the mode.
+    - I used 2D arrays (row-major order) to model the maze of the game and to model the directions of the ghost in its
+            breadth-first search algorithm.
+    - I used an arraylist to keep track of whatever's in each maze square.
+            This is so each item knows when pacman eats it and thus should be removed from the arraylist and graphically.
+    - I used the built-in java LinkedList to keep track of the order in which ghosts are eaten, and therefore the order
+            of which ghost should be released from the pen. I also used a queue to keep track of the ghost's valid
+            neighbors since it searches for its neighbors and then its neighbors neighbors and so forth. This makes sure
+            every valid neighbor is checked.
+    - I used an interface for collidable items such as ghosts, dots, and energizers. Each item collides with pacman
+            and returns a certain number of points. Using this interface makes it easier to track collision for each
+            item in the game class.
+
+KNOWN BUGS:
+    - At first, my BFS had my ghost running towards the direction of pacman initially, but then travelled left and right
+            from square to square instead of finding pacman. After using a print statement to print out the size of my
+            queue, I found out my queue wasn't getting bigger so I realized I was not adding the neighbors' neighbors
+            correctly to the queue. I created a separate method to add the neighbors' neighbors. I first had my
+            direction in my direction array as the direction the ghost would have to take to move into that square
+            instead of the direction of the previous neighbor.
+    - After the game reset after a life was lost, I would move my pacman and it would lose a life without actually
+            colliding with a ghost because my ghost's previous location wasn't being removed so it was detecting a ghost
+            in the square without it actually being there. To fix this, in my reset method, I removed the ghost from
+            my arraylist of collidables before moving the ghost into the pen.
+    - When my ghost moved into the middle area of the maze, it would disappear. To know if the ghost literally just
+            disappeared from the screen and was teleporting or was being hidden, I used a print statement to show the
+            direction of the ghost's current location. It was printing different directions even after the ghost
+            disappeared in the middle so I thought the maze squares must have been hiding them. In my make map method,
+            I tried placing the part where I make ghosts after I make the maze squares, but it was still being hidden.
+            I had to make a method in the ghost class to bring the ghost graphically to the front.
+    - I moved pacman, check for collisions, move ghosts, and check for collisions but when my pacman and ghost move
+            towards each other at the same time, they still passed over each other. I posted on piazza and they told me
+            I should not remove something from an arraylist while looping. Before, I had my method to clear my
+            collidable arraylist in my for loop when looking at all items so I moved that statement to after I was done
+            with my for loop.
+    - After my game ended, I could still pause the game. When I repeatedly hit the spacebar, the screen would flash the
+            "you are paused my dude" over and over. This was because my KeyHandler was still working. To solve this,
+            when my game is over, I remove the KeyHandler from pacman so it can no longer pause.
+
+
+Hours: I think this project took me about 50 hours?? im bad at est time
